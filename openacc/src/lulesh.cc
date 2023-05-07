@@ -302,7 +302,7 @@ void InitStressTermsForElems(Real_t *p, Real_t *q,
    // pull in the stresses appropriate to the hydro integration
    //
 #ifdef _OPENACC
-#pragma acc parallel loop present(p[numElem], q[numElem], \
+#pragma acc parallel loop present(p[:numElem], q[:numElem], \
                                   sigxx,sigyy,sigzz) 
 #else
 #pragma omp parallel for firstprivate(numElem)
@@ -507,17 +507,17 @@ void IntegrateStressForElems( Index_t *nodelist,
 
   // loop over all elements
 #ifdef _OPENACC
-#pragma acc parallel loop present(x[numNode],         \
-                                  y[numNode],         \
-                                  z[numNode],         \
-                                  determ[numElem],    \
-                                  nodelist[numElem8], \
-                                  sigxx[numElem],     \
-                                  sigyy[numElem],     \
-                                  sigzz[numElem],     \
-                                  fx_elem[numElem8],  \
-                                  fy_elem[numElem8],  \
-                                  fz_elem[numElem8])
+#pragma acc parallel loop present(x[:numNode],         \
+                                  y[:numNode],         \
+                                  z[:numNode],         \
+                                  determ[:numElem],    \
+                                  nodelist[:numElem8], \
+                                  sigxx[:numElem],     \
+                                  sigyy[:numElem],     \
+                                  sigzz[:numElem],     \
+                                  fx_elem[:numElem8],  \
+                                  fy_elem[:numElem8],  \
+                                  fz_elem[:numElem8])
 #else
 #pragma omp parallel for firstprivate(numElem)
 #endif
@@ -611,16 +611,16 @@ void IntegrateStressForElems( Index_t *nodelist,
                              + nodeElemCount[numNode-1];
 #ifdef _OPENACC
 #pragma acc kernels loop independent vector(256) \
-                          present(fx_elem[numElem8], \
-                                  fy_elem[numElem8], \
-                                  fz_elem[numElem8], \
-                                  nodelist[numElem8],\
-                                  fx[numElem],       \
-                                  fy[numElem],       \
-                                  fz[numElem],       \
-                                  nodeElemCount[numNode], \
-                                  nodeElemCornerList[nCorner], \
-                                  nodeElemStart[numNode])
+                          present(fx_elem[:numElem8], \
+                                  fy_elem[:numElem8], \
+                                  fz_elem[:numElem8], \
+                                  nodelist[:numElem8],\
+                                  fx[:numElem],       \
+                                  fy[:numElem],       \
+                                  fz[:numElem],       \
+                                  nodeElemCount[:numNode], \
+                                  nodeElemCornerList[:nCorner], \
+                                  nodeElemStart[:numNode])
 #else
 #pragma omp parallel for firstprivate(numNode)
 #endif
@@ -1174,23 +1174,23 @@ void CalcFBHourglassForceForElems( Domain &domain,
 /*************************************************/
 /*    compute the hourglass modes */
 #ifdef _OPENACC
-#pragma acc kernels copyin(gamma[4][8])         \
-                    present(fx_elem[numElem8], \
-                            fy_elem[numElem8], \
-                            fz_elem[numElem8], \
-                            xd[numNode],       \
-                            yd[numNode],       \
-                            zd[numNode],       \
-                            dvdx[numElem8],    \
-                            dvdy[numElem8],    \
-                            dvdz[numElem8],    \
-                            x8n[numElem8],     \
-                            y8n[numElem8],     \
-                            z8n[numElem8],     \
-                            nodelist[numElem8],\
-                            determ[numElem],   \
-                            ss[numElem],       \
-                            elemMass[numElem])
+#pragma acc kernels copyin(gamma[:4][:8])         \
+                    present(fx_elem[:numElem8], \
+                            fy_elem[:numElem8], \
+                            fz_elem[:numElem8], \
+                            xd[:numNode],       \
+                            yd[:numNode],       \
+                            zd[:numNode],       \
+                            dvdx[:numElem8],    \
+                            dvdy[:numElem8],    \
+                            dvdz[:numElem8],    \
+                            x8n[:numElem8],     \
+                            y8n[:numElem8],     \
+                            z8n[:numElem8],     \
+                            nodelist[:numElem8],\
+                            determ[:numElem],   \
+                            ss[:numElem],       \
+                            elemMass[:numElem])
 #pragma acc cache(gamma)
 #pragma acc loop independent
 #else
@@ -1301,15 +1301,15 @@ void CalcFBHourglassForceForElems( Domain &domain,
   // Collect the data from the local arrays into the final force arrays
 #ifdef _OPENACC
 #pragma acc kernels loop independent vector(256) \
-                          present(nodeElemCount[numNode],      \
-                                  nodeElemStart[numNode],      \
-                                  nodeElemCornerList[nCorner], \
-                                  fx_elem[numElem8],           \
-                                  fy_elem[numElem8],           \
-                                  fz_elem[numElem8],           \
-                                  fx[numNode],                 \
-                                  fy[numNode],                 \
-                                  fz[numNode])
+                          present(nodeElemCount[:numNode],      \
+                                  nodeElemStart[:numNode],      \
+                                  nodeElemCornerList[:nCorner], \
+                                  fx_elem[:numElem8],           \
+                                  fy_elem[:numElem8],           \
+                                  fz_elem[:numElem8],           \
+                                  fx[:numNode],                 \
+                                  fy[:numNode],                 \
+                                  fz[:numNode])
 #else
 #pragma omp parallel for firstprivate(numNode)
 #endif
@@ -1425,19 +1425,19 @@ void CalcHourglassControlForElems(Domain& domain,
   int abort = 0;
   /* start loop over elements */
 #ifdef _OPENACC
-#pragma acc parallel loop present(dvdx[numElem8],     \
-                                  dvdy[numElem8],     \
-                                  dvdz[numElem8],     \
-                                  x8n[numElem8],      \
-                                  y8n[numElem8],      \
-                                  z8n[numElem8],      \
-                                  x[numNode],         \
-                                  y[numNode],         \
-                                  z[numNode],         \
-                                  volo[numElem],      \
-                                  v[numElem],         \
-                                  determ[numElem],    \
-                                  nodelist[numElem8]) \
+#pragma acc parallel loop present(dvdx[:numElem8],     \
+                                  dvdy[:numElem8],     \
+                                  dvdz[:numElem8],     \
+                                  x8n[:numElem8],      \
+                                  y8n[:numElem8],      \
+                                  z8n[:numElem8],      \
+                                  x[:numNode],         \
+                                  y[:numNode],         \
+                                  z[:numNode],         \
+                                  volo[:numElem],      \
+                                  v[:numElem],         \
+                                  determ[:numElem],    \
+                                  nodelist[:numElem8]) \
                           private(abort)
 #else
 #pragma omp parallel for firstprivate(numElem) reduction(max: abort)
@@ -1529,7 +1529,7 @@ void CalcVolumeForceForElems(Domain& domain, Real_t *fx, Real_t *fy, Real_t *fz)
                              numNode);
     int abort = 0;
 #ifdef _OPENACC
-#pragma acc parallel loop present(determ[numElem]) \
+#pragma acc parallel loop present(determ[:numElem]) \
                           private(abort)
 #else
 #pragma omp parallel for  reduction(max:abort) firstprivate(numElem)  
@@ -1572,9 +1572,9 @@ static inline void CalcForceForNodes(Domain& domain)
   Real_t *fz = domain.fz();
 
 #ifdef _OPENACC
-#pragma acc parallel loop present(fx[numNode], \
-                                  fy[numNode], \
-                                  fz[numNode])
+#pragma acc parallel loop present(fx[:numNode], \
+                                  fy[:numNode], \
+                                  fz[:numNode])
 #else
 #pragma omp parallel for firstprivate(numNode)
 #endif
@@ -1590,13 +1590,13 @@ static inline void CalcForceForNodes(Domain& domain)
 #if USE_MPI  
   Real_t *fieldData[3] ;
 
-#pragma acc data present(fx[numNode], \
-                         fy[numNode], \
-                         fz[numNode])
+#pragma acc data present(fx[:numNode], \
+                         fy[:numNode], \
+                         fz[:numNode])
   {
-#pragma acc update host(fx[numNode], \
-                        fy[numNode], \
-                        fz[numNode])
+#pragma acc update host(fx[:numNode], \
+                        fy[:numNode], \
+                        fz[:numNode])
     
     fieldData[0] = fx;
     fieldData[1] = fy;
@@ -1605,9 +1605,9 @@ static inline void CalcForceForNodes(Domain& domain)
              domain.sizeX() + 1, domain.sizeY() + 1, domain.sizeZ() +  1,
              true, false) ;
     CommSBN(domain, 3, fieldData) ;
-#pragma acc update device(fx[numNode], \
-                          fy[numNode], \
-                          fz[numNode]) \
+#pragma acc update device(fx[:numNode], \
+                          fy[:numNode], \
+                          fz[:numNode]) \
                    async
   } // end acc data
 #endif  
@@ -1621,13 +1621,13 @@ void CalcAccelerationForNodes(Real_t *xdd, Real_t *ydd, Real_t *zdd,
                               Real_t *nodalMass, Index_t numNode)
 {
 #ifdef _OPENACC
-#pragma acc parallel loop present(fx[numNode], \
-                                  fy[numNode], \
-                                  fz[numNode], \
-                                  xdd[numNode], \
-                                  ydd[numNode], \
-                                  zdd[numNode], \
-                                  nodalMass[numNode])
+#pragma acc parallel loop present(fx[:numNode], \
+                                  fy[:numNode], \
+                                  fz[:numNode], \
+                                  xdd[:numNode], \
+                                  ydd[:numNode], \
+                                  zdd[:numNode], \
+                                  nodalMass[:numNode])
 #else
 #pragma omp parallel for firstprivate(numNode)
 #endif
@@ -1659,12 +1659,12 @@ void ApplyAccelerationBoundaryConditionsForNodes(Domain& domain,
 
 #ifdef _OPENACC
 #pragma acc parallel firstprivate(numNodeBC) \
-                     present(xdd[numNode], \
-                             ydd[numNode], \
-                             zdd[numNode], \
-                             symmX[numNodeBC], \
-                             symmY[numNodeBC], \
-                             symmZ[numNodeBC])
+                     present(xdd[:numNode], \
+                             ydd[:numNode], \
+                             zdd[:numNode], \
+                             symmX[:numNodeBC], \
+                             symmY[:numNodeBC], \
+                             symmZ[:numNodeBC])
 #else
 #pragma omp parallel firstprivate(numNodeBC)
 #endif
@@ -1710,12 +1710,12 @@ void CalcVelocityForNodes(Real_t *xd,  Real_t *yd,  Real_t *zd,
                           Index_t numNode)
 {
 #ifdef _OPENACC
-#pragma acc parallel loop present(xd[numNode], \
-                                  yd[numNode], \
-                                  zd[numNode], \
-                                  xdd[numNode], \
-                                  ydd[numNode], \
-                                  zdd[numNode])
+#pragma acc parallel loop present(xd[:numNode], \
+                                  yd[:numNode], \
+                                  zd[:numNode], \
+                                  xdd[:numNode], \
+                                  ydd[:numNode], \
+                                  zdd[:numNode])
 #else
 #pragma omp parallel for firstprivate(numNode)
 #endif
@@ -1745,12 +1745,12 @@ void CalcPositionForNodes(Real_t *x,  Real_t *y,  Real_t *z,
                           const Real_t dt, Index_t numNode)
 {
 #ifdef _OPENACC
-#pragma acc parallel loop present(x[numNode], \
-                                  y[numNode], \
-                                  z[numNode], \
-                                  xd[numNode], \
-                                  yd[numNode], \
-                                  zd[numNode])
+#pragma acc parallel loop present(x[:numNode], \
+                                  y[:numNode], \
+                                  z[:numNode], \
+                                  xd[:numNode], \
+                                  yd[:numNode], \
+                                  zd[:numNode])
 #else
 #pragma omp parallel for firstprivate(numNode)
 #endif
@@ -1807,12 +1807,12 @@ void LagrangeNodal(Domain& domain)
 #endif
 
 // redundant data region to allow for early acc updates before communication
-#pragma acc data present(x[numNode], \
-                         y[numNode], \
-                         z[numNode], \
-                         xd[numNode], \
-                         yd[numNode], \
-                         zd[numNode])
+#pragma acc data present(x[:numNode], \
+                         y[:numNode], \
+                         z[:numNode], \
+                         xd[:numNode], \
+                         yd[:numNode], \
+                         zd[:numNode])
   {
 #if USE_MPI
     /* used for async update */
@@ -1833,9 +1833,9 @@ void LagrangeNodal(Domain& domain)
 #if USE_MPI
 #ifdef SEDOV_SYNC_POS_VEL_EARLY
   /* start to update velocities asynchronously before the MPI comm */
-#pragma acc update host(xd[numNode], \
-                        yd[numNode], \
-                        zd[numNode]) \
+#pragma acc update host(xd[:numNode], \
+                        yd[:numNode], \
+                        zd[:numNode]) \
                    async(up)
 #endif
 #endif
@@ -1846,9 +1846,9 @@ void LagrangeNodal(Domain& domain)
 
 #if USE_MPI
 #ifdef SEDOV_SYNC_POS_VEL_EARLY
-#pragma acc update host(x[numNode], \
-                        y[numNode], \
-                        z[numNode]) \
+#pragma acc update host(x[:numNode], \
+                        y[:numNode], \
+                        z[:numNode]) \
                    async(up)
 #pragma acc wait(up)
     fieldData[0] = x ;
@@ -1864,12 +1864,12 @@ void LagrangeNodal(Domain& domain)
     CommSyncPosVel(domain) ;
 
 /* update device after CommRecv */
-#pragma acc update device(x[numNode], \
-                          y[numNode], \
-                          z[numNode], \
-                          xd[numNode], \
-                          yd[numNode], \
-                          zd[numNode]) \
+#pragma acc update device(x[:numNode], \
+                          y[:numNode], \
+                          z[:numNode], \
+                          xd[:numNode], \
+                          yd[:numNode], \
+                          zd[:numNode]) \
                    async
 #endif
 #endif
@@ -2209,21 +2209,21 @@ void CalcKinematicsForElems( Index_t *nodelist,
 
   // loop over all elements
 #ifdef _OPENACC
-#pragma acc parallel loop present(dxx[numElem], \
-                                  dyy[numElem], \
-                                  dzz[numElem], \
-                                  x[numNode], \
-                                  y[numNode], \
-                                  z[numNode], \
-                                  xd[numNode], \
-                                  yd[numNode], \
-                                  zd[numNode], \
-                                  v[numElem], \
-                                  volo[numElem], \
-                                  vnew[numElem], \
-                                  delv[numElem], \
-                                  arealg[numElem], \
-                                  nodelist[numElem8])
+#pragma acc parallel loop present(dxx[:numElem], \
+                                  dyy[:numElem], \
+                                  dzz[:numElem], \
+                                  x[:numNode], \
+                                  y[:numNode], \
+                                  z[:numNode], \
+                                  xd[:numNode], \
+                                  yd[:numNode], \
+                                  zd[:numNode], \
+                                  v[:numElem], \
+                                  volo[:numElem], \
+                                  vnew[:numElem], \
+                                  delv[:numElem], \
+                                  arealg[:numElem], \
+                                  nodelist[:numElem8])
 #else
 #pragma omp parallel for firstprivate(numElem, deltaTime)
 #endif
@@ -2406,11 +2406,11 @@ void CalcLagrangeElements(Domain& domain, Real_t* vnew)
     // element loop to do some stuff not included in the elemlib function.
     int abort = 0;
 #ifdef _OPENACC
-#pragma acc parallel loop present(vdov[numElem], \
-                                  dxx[numElem], \
-                                  dyy[numElem], \
-                                  dzz[numElem], \
-                                  vnew[numElem]) \
+#pragma acc parallel loop present(vdov[:numElem], \
+                                  dxx[:numElem], \
+                                  dyy[:numElem], \
+                                  dzz[:numElem], \
+                                  vnew[:numElem]) \
                           private(abort)
 #else
 #pragma omp parallel for firstprivate(numElem) reduction(max: abort)
@@ -2470,21 +2470,21 @@ void CalcMonotonicQGradientsForElems(Domain& domain, Real_t vnew[], Index_t allE
   Real_t *delx_zeta = domain.delx_zeta();
 
 #ifdef _OPENACC
-#pragma acc parallel loop present(vnew[numElem], \
-                                  nodelist[numElem8], \
-                                  x[numNode], \
-                                  y[numNode], \
-                                  z[numNode], \
-                                  xd[numNode], \
-                                  yd[numNode], \
-                                  zd[numNode], \
-                                  volo[numElem], \
-                                  delx_xi[allElem], \
-                                  delx_eta[allElem], \
-                                  delx_zeta[allElem], \
-                                  delv_xi[allElem], \
-                                  delv_eta[allElem], \
-                                  delv_zeta[allElem])
+#pragma acc parallel loop present(vnew[:numElem], \
+                                  nodelist[:numElem8], \
+                                  x[:numNode], \
+                                  y[:numNode], \
+                                  z[:numNode], \
+                                  xd[:numNode], \
+                                  yd[:numNode], \
+                                  zd[:numNode], \
+                                  volo[:numElem], \
+                                  delx_xi[:allElem], \
+                                  delx_eta[:allElem], \
+                                  delx_zeta[:allElem], \
+                                  delv_xi[:allElem], \
+                                  delv_eta[:allElem], \
+                                  delv_zeta[:allElem])
 #else
 #pragma omp parallel for firstprivate(numElem)
 #endif
@@ -2676,26 +2676,26 @@ void CalcMonotonicQRegionForElems(Domain &domain, Int_t r,
 #pragma acc parallel loop firstprivate(qlc_monoq, qqc_monoq, \
                                        monoq_limiter_mult, monoq_max_slope, \
                                        ptiny) \
-                          copyin(regElemlist[regElemSize]) \
-                          present(vnew[numElem], \
-                                  vdov[numElem], \
-                                  delx_xi[allElem], \
-                                  delx_eta[allElem], \
-                                  delx_zeta[allElem], \
-                                  delv_xi[allElem], \
-                                  delv_eta[allElem], \
-                                  delv_zeta[allElem], \
-                                  elemMass[numElem], \
-                                  volo[numElem], \
-                                  lxip[numElem], \
-                                  lxim[numElem], \
-                                  letam[numElem], \
-                                  letap[numElem], \
-                                  lzetam[numElem], \
-                                  lzetap[numElem], \
-                                  ql[numElem], \
-                                  qq[numElem], \
-                                  elemBC[numElem])
+                          copyin(regElemlist[:regElemSize]) \
+                          present(vnew[:numElem], \
+                                  vdov[:numElem], \
+                                  delx_xi[:allElem], \
+                                  delx_eta[:allElem], \
+                                  delx_zeta[:allElem], \
+                                  delv_xi[:allElem], \
+                                  delv_eta[:allElem], \
+                                  delv_zeta[:allElem], \
+                                  elemMass[:numElem], \
+                                  volo[:numElem], \
+                                  lxip[:numElem], \
+                                  lxim[:numElem], \
+                                  letam[:numElem], \
+                                  letap[:numElem], \
+                                  lzetam[:numElem], \
+                                  lzetap[:numElem], \
+                                  ql[:numElem], \
+                                  qq[:numElem], \
+                                  elemBC[:numElem])
 #else
 #pragma omp parallel for firstprivate(qlc_monoq, qqc_monoq, monoq_limiter_mult, monoq_max_slope, ptiny)
 #endif
@@ -2958,13 +2958,13 @@ void CalcPressureForElems(Domain &domain, Real_t* p_new, Real_t* bvc,
 
   volatile Index_t numElem = domain.numElem();
 #ifdef _OPENACC
-#pragma acc parallel loop present(regElemList[length], \
-                         compression[length], \
-                         pbvc[length], \
-                         p_new[length], \
-                         bvc[length], \
-                         e_old[length], \
-                         vnewc[numElem])
+#pragma acc parallel loop present(regElemList[:length], \
+                         compression[:length], \
+                         pbvc[:length], \
+                         p_new[:length], \
+                         bvc[:length], \
+                         e_old[:length], \
+                         vnewc[:numElem])
 #else
 #pragma omp parallel for firstprivate(length, pmin, p_cut, eosvmax)
 #endif
@@ -3007,19 +3007,19 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
 
 #ifdef _OPENACC
   volatile Index_t numElem = domain.numElem();
-#pragma acc data create(pHalfStep[length])
+#pragma acc data create(pHalfStep[:length])
 {
 #endif
 
 #ifdef _OPENACC
-#pragma acc parallel loop present(e_new[length], \
-                                  e_old[length], \
-                                  p_old[length], \
-                                  q_old[length], \
-                                  delvc[length], \
-                                  work[length])
+#pragma acc parallel loop present(e_new[:length], \
+                                  e_old[:length], \
+                                  p_old[:length], \
+                                  q_old[:length], \
+                                  delvc[:length], \
+                                  work[:length])
 #else
-#pragma omp parallel for firstprivate(length, emin)
+#pragma omp parallel for firstprivate(:length, emin)
 #endif
   for (Index_t i = 0 ; i < length ; ++i) {
     e_new[i] = e_old[i] - Real_t(0.5) * delvc[i] * (p_old[i] + q_old[i])
@@ -3034,19 +3034,19 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
       pmin, p_cut, eosvmax, length, regElemList);
 
 #ifdef _OPENACC
-#pragma acc parallel loop present(compHalfStep[length], \
-                                  pHalfStep[length], \
-                                  delvc[length], \
-                                  p_old[length], \
-                                  q_old[length], \
-                                  ql_old[length], \
-                                  qq_old[length], \
-                                  q_new[length], \
-                                  pbvc[length], \
-                                  bvc[length], \
-                                  e_new[length])
+#pragma acc parallel loop present(compHalfStep[:length], \
+                                  pHalfStep[:length], \
+                                  delvc[:length], \
+                                  p_old[:length], \
+                                  q_old[:length], \
+                                  ql_old[:length], \
+                                  qq_old[:length], \
+                                  q_new[:length], \
+                                  pbvc[:length], \
+                                  bvc[:length], \
+                                  e_new[:length])
 #else
-#pragma omp parallel for firstprivate(length, rho0)
+#pragma omp parallel for firstprivate(:length, rho0)
 #endif
   for (Index_t i = 0 ; i < length ; ++i) {
     Real_t vhalf = Real_t(1.) / (Real_t(1.) + compHalfStep[i]) ;
@@ -3073,8 +3073,8 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
   }
 
 #ifdef _OPENACC
-#pragma acc parallel loop present(e_new[length], \
-                                  work[length])
+#pragma acc parallel loop present(e_new[:length], \
+                                  work[:length])
 #else
 #pragma omp parallel for firstprivate(length, emin, e_cut)
 #endif
@@ -3094,19 +3094,19 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
                        pmin, p_cut, eosvmax, length, regElemList);
 
 #ifdef _OPENACC
-#pragma acc parallel loop present(regElemList[length], \
-                                  pHalfStep[length], \
-                                  delvc[length], \
-                                  pbvc[length], \
-                                  e_new[length], \
-                                  bvc[length], \
-                                  ql_old[length], \
-                                  qq_old[length], \
-                                  p_old[length], \
-                                  q_old[length], \
-                                  p_new[length], \
-                                  q_new[length], \
-                                  vnewc[numElem])
+#pragma acc parallel loop present(regElemList[:length], \
+                                  pHalfStep[:length], \
+                                  delvc[:length], \
+                                  pbvc[:length], \
+                                  e_new[:length], \
+                                  bvc[:length], \
+                                  ql_old[:length], \
+                                  qq_old[:length], \
+                                  p_old[:length], \
+                                  q_old[:length], \
+                                  p_new[:length], \
+                                  q_new[:length], \
+                                  vnewc[:numElem])
 #else
 #pragma omp parallel for firstprivate(length, rho0, emin, e_cut)
 #endif
@@ -3147,16 +3147,16 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
                         pmin, p_cut, eosvmax, length, regElemList);
 
 #ifdef _OPENACC
-#pragma acc parallel loop present(regElemList[length], \
-                                  delvc[length], \
-                                  pbvc[length], \
-                                  e_new[length], \
-                                  vnewc[numElem], \
-                                  bvc[length], \
-                                  ql_old[length], \
-                                  qq_old[length], \
-                                  p_new[length], \
-                                  q_new[length])
+#pragma acc parallel loop present(regElemList[:length], \
+                                  delvc[:length], \
+                                  pbvc[:length], \
+                                  e_new[:length], \
+                                  vnewc[:numElem], \
+                                  bvc[:length], \
+                                  ql_old[:length], \
+                                  qq_old[:length], \
+                                  p_new[:length], \
+                                  q_new[:length])
 #else
 #pragma omp parallel for firstprivate(length, rho0, q_cut)
 #endif
@@ -3197,13 +3197,13 @@ void CalcSoundSpeedForElems(Real_t *ss,
                             Index_t numElem, Int_t len, Index_t *regElemList)
 {
 #ifdef _OPENACC
-#pragma acc parallel loop present(vnewc[numElem], \
-                                  regElemList[len], \
-                                  pbvc[len], \
-                                  enewc[len], \
-                                  bvc[len], \
-                                  pnewc[len], \
-                                  ss[numElem]) \
+#pragma acc parallel loop present(vnewc[:numElem], \
+                                  regElemList[:len], \
+                                  pbvc[:len], \
+                                  enewc[:len], \
+                                  bvc[:len], \
+                                  pnewc[:len], \
+                                  ss[:numElem]) \
                           firstprivate(rho0, ss4o3)
 #else
 #pragma omp parallel for firstprivate(rho0, ss4o3)
@@ -3263,21 +3263,21 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
   Index_t numElem = domain.numElem();
  
 #ifdef _OPENACC
-#pragma acc data present(e_old[numElemReg], \
-                        delvc[numElemReg], \
-                        p_old[numElemReg], \
-                        q_old[numElemReg], \
-                        compression[numElemReg], \
-                        compHalfStep[numElemReg], \
-                        qq_old[numElemReg], \
-                        ql_old[numElemReg], \
-                        work[numElemReg], \
-                        p_new[numElemReg], \
-                        e_new[numElemReg], \
-                        q_new[numElemReg], \
-                        bvc[numElemReg], \
-                        pbvc[numElemReg]) \
-                 copyin(regElemList[numElemReg])
+#pragma acc data present(e_old[:numElemReg], \
+                        delvc[:numElemReg], \
+                        p_old[:numElemReg], \
+                        q_old[:numElemReg], \
+                        compression[:numElemReg], \
+                        compHalfStep[:numElemReg], \
+                        qq_old[:numElemReg], \
+                        ql_old[:numElemReg], \
+                        work[:numElemReg], \
+                        p_new[:numElemReg], \
+                        e_new[:numElemReg], \
+                        q_new[:numElemReg], \
+                        bvc[:numElemReg], \
+                        pbvc[:numElemReg]) \
+                 copyin(regElemList[:numElemReg])
 #endif
 { // acc data brace
 
@@ -3290,21 +3290,21 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
 //{ // omp parallel brace
 
 #ifdef _OPENACC
-#pragma acc parallel loop present(e_old[numElemReg], \
-                                  delvc[numElemReg], \
-                                  p_old[numElemReg], \
-                                  q_old[numElemReg], \
-                                  compression[numElemReg], \
-                                  compHalfStep[numElemReg], \
-                                  regElemList[numElemReg], \
-                                  qq_old[numElemReg], \
-                                  ql_old[numElemReg], \
-                                  p[numElem], \
-                                  e[numElem], \
-                                  q[numElem], \
-                                  delv[numElem], \
-                                  qq[numElem], \
-                                  ql[numElem])
+#pragma acc parallel loop present(e_old[:numElemReg], \
+                                  delvc[:numElemReg], \
+                                  p_old[:numElemReg], \
+                                  q_old[:numElemReg], \
+                                  compression[:numElemReg], \
+                                  compHalfStep[:numElemReg], \
+                                  regElemList[:numElemReg], \
+                                  qq_old[:numElemReg], \
+                                  ql_old[:numElemReg], \
+                                  p[:numElem], \
+                                  e[:numElem], \
+                                  q[:numElem], \
+                                  delv[:numElem], \
+                                  qq[:numElem], \
+                                  ql[:numElem])
 #else
 #pragma omp for nowait firstprivate(numElemReg)
 #endif
@@ -3319,11 +3319,11 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
     }
 
 #ifdef _OPENACC
-#pragma acc parallel loop present(vnewc[numElem], \
-                                  compression[numElemReg], \
-                                  delvc[numElemReg], \
-                                  compHalfStep[numElemReg], \
-                                  regElemList[numElemReg])
+#pragma acc parallel loop present(vnewc[:numElem], \
+                                  compression[:numElemReg], \
+                                  delvc[:numElemReg], \
+                                  compHalfStep[:numElemReg], \
+                                  regElemList[:numElemReg])
 #else
 #pragma omp for
 #endif
@@ -3337,13 +3337,13 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
 
 // Fused some loops here to reduce overhead of repeatedly calling small kernels
 #ifdef _OPENACC
-#pragma acc parallel loop present(vnewc[numElem], \
-                                  compHalfStep[numElemReg], \
-                                  compression[numElemReg], \
-                                  regElemList[numElemReg], \
-                                  p_old[numElemReg], \
-                                  compHalfStep[numElemReg], \
-                                  work[numElemReg])
+#pragma acc parallel loop present(vnewc[:numElem], \
+                                  compHalfStep[:numElemReg], \
+                                  compression[:numElemReg], \
+                                  regElemList[:numElemReg], \
+                                  p_old[:numElemReg], \
+                                  compHalfStep[:numElemReg], \
+                                  work[:numElemReg])
 #else
 #pragma omp for
 #endif
@@ -3370,12 +3370,12 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
 } // end foreach repetition
 
 #ifdef _OPENACC
-#pragma acc parallel loop present(p_new[numElemReg], \
-                                  e_new[numElemReg], \
-                                  q_new[numElemReg], \
-                                  p[numElem], \
-                                  e[numElem], \
-                                  q[numElem])
+#pragma acc parallel loop present(p_new[:numElemReg], \
+                                  e_new[:numElemReg], \
+                                  q_new[:numElemReg], \
+                                  p[:numElem], \
+                                  e[:numElem], \
+                                  q[:numElem])
 #else
 #pragma omp parallel for firstprivate(numElemReg)
 #endif
@@ -3408,7 +3408,7 @@ void ApplyMaterialPropertiesForElems(Domain& domain, Real_t vnew[])
     Real_t eosvmax = domain.eosvmax() ;
 
 #ifdef _OPENACC
-#pragma acc data present(vnew[numElem])
+#pragma acc data present(vnew[:numElem])
 #else
 #pragma omp parallel firstprivate(numElem)
 #endif
@@ -3445,7 +3445,7 @@ void ApplyMaterialPropertiesForElems(Domain& domain, Real_t vnew[])
       Real_t vc = 1.;
 #ifdef _OPENACC
 #pragma acc parallel loop private(vc) \
-                          present(v[numElem])
+                          present(v[:numElem])
 #else
 #pragma omp for nowait private(vc) reduction(min: vc)
 #endif
@@ -3498,8 +3498,8 @@ void UpdateVolumesForElems(Real_t *vnew, Real_t *v,
 {
   if (length != 0) {
 #ifdef _OPENACC
-#pragma acc parallel loop present(vnew[length], \
-                                  v[length])
+#pragma acc parallel loop present(vnew[:length], \
+                                  v[:length])
 #else
 #pragma omp parallel for firstprivate(length, v_cut)
 #endif
@@ -3736,12 +3736,6 @@ void LagrangeLeapFrog(Domain& domain)
    * applied boundary conditions and slide surface considerations */
   LagrangeNodal(domain);
 
-#pragma acc data present(x[numNode], \
-                         y[numNode], \
-                         z[numNode], \
-                         xd[numNode], \
-                         yd[numNode], \
-                         zd[numNode])
 {
 #if USE_MPI   
 
@@ -3754,12 +3748,12 @@ void LagrangeLeapFrog(Domain& domain)
 
   /* asynchronously update on host before MPI comm */
   volatile int up = 1;
-#pragma acc update host(x[numNode], \
-                        y[numNode], \
-                        z[numNode], \
-                        xd[numNode], \
-                        yd[numNode], \
-                        zd[numNode]) \
+#pragma acc update host(x[:numNode], \
+                        y[:numNode], \
+                        z[:numNode], \
+                        xd[:numNode], \
+                        yd[:numNode], \
+                        zd[:numNode]) \
                    async(up)
 #endif
 #endif
@@ -3773,13 +3767,13 @@ void LagrangeLeapFrog(Domain& domain)
   volatile Real_t *ss = domain.ss();
   volatile Real_t *vdov = domain.vdov();
   volatile Real_t *arealg = domain.arealg();
-#pragma acc data present(ss[numElem], \
-                         vdov[numElem], \
-                         arealg[numElem])
+#pragma acc data present(ss[:numElem], \
+                         vdov[:numElem], \
+                         arealg[:numElem])
 {
-#pragma acc update host(ss[numElem], \
-                        vdov[numElem], \
-                        arealg[numElem]) \
+#pragma acc update host(ss[:numElem], \
+                        vdov[:numElem], \
+                        arealg[:numElem]) \
                    async
 }
 #endif
@@ -3812,12 +3806,12 @@ void LagrangeLeapFrog(Domain& domain)
 #if USE_MPI   
 #ifdef SEDOV_SYNC_POS_VEL_LATE
   CommSyncPosVel(domain) ;
-#pragma acc update device(x[numNode], \
-                          y[numNode], \
-                          z[numNode], \
-                          xd[numNode], \
-                          yd[numNode], \
-                          zd[numNode]) \
+#pragma acc update device(x[:numNode], \
+                          y[:numNode], \
+                          z[:numNode], \
+                          xd[:numNode], \
+                          yd[:numNode], \
+                          zd[:numNode]) \
                    async
 #endif
 #endif   
@@ -4066,82 +4060,82 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-#pragma acc data create(fx[numNode], \
-                        fy[numNode], \
-                        fz[numNode], \
-                        fx_elem[numElem8], \
-                        fy_elem[numElem8], \
-                        fz_elem[numElem8], \
-                        dvdx[numElem8], \
-                        dvdy[numElem8], \
-                        dvdz[numElem8], \
-                        x8n[numElem8], \
-                        y8n[numElem8], \
-                        z8n[numElem8], \
-                        sigxx[numElem], \
-                        sigyy[numElem], \
-                        sigzz[numElem], \
-                        determ[numElem], \
-                        dxx[numElem], \
-                        dyy[numElem], \
-                        dzz[numElem], \
-                        vnew[numElem], \
-                        delx_xi[allElem], \
-                        delx_eta[allElem], \
-                        delx_zeta[allElem], \
-                        delv_xi[allElem], \
-                        delv_eta[allElem], \
-                        delv_zeta[allElem], \
-                        e_old[maxRegSize],  \
-                        delvc[maxRegSize],  \
-                        p_old[maxRegSize],  \
-                        q_old[maxRegSize],  \
-                        compression[maxRegSize],  \
-                        compHalfStep[maxRegSize],  \
-                        qq_old[maxRegSize],  \
-                        ql_old[maxRegSize],  \
-                        work[maxRegSize],  \
-                        p_new[maxRegSize],  \
-                        e_new[maxRegSize],  \
-                        q_new[maxRegSize],  \
-                        bvc[maxRegSize],  \
-                        pbvc[maxRegSize]) \
-                 copy(x[numNode], \
-                      y[numNode], \
-                      z[numNode], \
-                      xd[numNode], \
-                      yd[numNode], \
-                      zd[numNode], \
-                      p[numElem], \
-                      e[numElem]) \
-                 copyin(symmX[numNodeBC], \
-                        symmY[numNodeBC], \
-                        symmZ[numNodeBC], \
-                        xdd[numNode], \
-                        ydd[numNode], \
-                        zdd[numNode], \
-                        v[numElem], \
-                        volo[numElem], \
-                        delv[numElem], \
-                        arealg[numElem], \
-                        vdov[numElem], \
-                        ss[numElem],       \
-                        q[numElem], \
-                        qq[numElem], \
-                        ql[numElem], \
-                        nodalMass[numNode], \
-                        elemMass[numElem], \
-                        lxim[numElem], \
-                        lxip[numElem], \
-                        letam[numElem], \
-                        letap[numElem], \
-                        lzetam[numElem], \
-                        lzetap[numElem], \
-                        nodelist[numElem8], \
-                        nodeElemCount[numNode], \
-                        nodeElemStart[numNode], \
-                        nodeElemCornerList[nCorner], \
-                        elemBC[numElem])
+#pragma acc data create(fx[:numNode], \
+                        fy[:numNode], \
+                        fz[:numNode], \
+                        fx_elem[:numElem8], \
+                        fy_elem[:numElem8], \
+                        fz_elem[:numElem8], \
+                        dvdx[:numElem8], \
+                        dvdy[:numElem8], \
+                        dvdz[:numElem8], \
+                        x8n[:numElem8], \
+                        y8n[:numElem8], \
+                        z8n[:numElem8], \
+                        sigxx[:numElem], \
+                        sigyy[:numElem], \
+                        sigzz[:numElem], \
+                        determ[:numElem], \
+                        dxx[:numElem], \
+                        dyy[:numElem], \
+                        dzz[:numElem], \
+                        vnew[:numElem], \
+                        delx_xi[:allElem], \
+                        delx_eta[:allElem], \
+                        delx_zeta[:allElem], \
+                        delv_xi[:allElem], \
+                        delv_eta[:allElem], \
+                        delv_zeta[:allElem], \
+                        e_old[:maxRegSize],  \
+                        delvc[:maxRegSize],  \
+                        p_old[:maxRegSize],  \
+                        q_old[:maxRegSize],  \
+                        compression[:maxRegSize],  \
+                        compHalfStep[:maxRegSize],  \
+                        qq_old[:maxRegSize],  \
+                        ql_old[:maxRegSize],  \
+                        work[:maxRegSize],  \
+                        p_new[:maxRegSize],  \
+                        e_new[:maxRegSize],  \
+                        q_new[:maxRegSize],  \
+                        bvc[:maxRegSize],  \
+                        pbvc[:maxRegSize]) \
+                 copy(x[:numNode], \
+                      y[:numNode], \
+                      z[:numNode], \
+                      xd[:numNode], \
+                      yd[:numNode], \
+                      zd[:numNode], \
+                      p[:numElem], \
+                      e[:numElem]) \
+                 copyin(symmX[:numNodeBC], \
+                        symmY[:numNodeBC], \
+                        symmZ[:numNodeBC], \
+                        xdd[:numNode], \
+                        ydd[:numNode], \
+                        zdd[:numNode], \
+                        v[:numElem], \
+                        volo[:numElem], \
+                        delv[:numElem], \
+                        arealg[:numElem], \
+                        vdov[:numElem], \
+                        ss[:numElem],       \
+                        q[:numElem], \
+                        qq[:numElem], \
+                        ql[:numElem], \
+                        nodalMass[:numNode], \
+                        elemMass[:numElem], \
+                        lxim[:numElem], \
+                        lxip[:numElem], \
+                        letam[:numElem], \
+                        letap[:numElem], \
+                        lzetam[:numElem], \
+                        lzetap[:numElem], \
+                        nodelist[:numElem8], \
+                        nodeElemCount[:numNode], \
+                        nodeElemStart[:numNode], \
+                        nodeElemCornerList[:nCorner], \
+                        elemBC[:numElem])
 #endif
 {
 #ifdef _OPENACC
